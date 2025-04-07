@@ -1,0 +1,8 @@
+[server]
+port = 8501
+enableCORS = false
+enableXsrfProtection = true
+baseUrlPath = "/proex/mapeamento-dc"
+
+[browser]
+serverAddress = "www.ufmg.br"
