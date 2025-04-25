@@ -195,14 +195,15 @@ with tab_tabela:
 # Gráficos
 # Gráfico de Vínculos
 with tab_vinculo:
-    vinculos_counts = dff['vinculo'].value_counts().reset_index()
-    vinculos_counts.columns = ['vinculo', 'count']
+    vinculos_counts = dff['vinculo'].value_counts(normalize=True).reset_index()
+    vinculos_counts.columns = ['vinculo', 'percentage']
+    vinculos_counts['percentage'] *= 100
     fig_vinculos = px.bar(
         vinculos_counts, 
         x='vinculo', 
-        y='count',
-        labels={'vinculo': '', 'count': ''}, 
-        title="Distribuição de Vínculos"
+        y='percentage',
+        labels={'vinculo': '', 'percentage': '%'}, 
+        title="Distribuição de Vínculos (Porcentagem)"
     )
     config_layout(fig_vinculos)
     st.subheader(f"Respostas filtradas: {len(dff)}")
@@ -211,38 +212,41 @@ with tab_vinculo:
 # Gráfico de Ações por Dimensão Acadêmica
 with tab_dimensao:
     contagens = dff[['extensão', 'ensino', 'pesquisa']].sum()
-    fig_tipo = go.Figure(data=[go.Pie(labels=contagens.index, values=contagens.values, title="")])
+    porcentagens = (contagens / contagens.sum()) * 100
+    fig_tipo = go.Figure(data=[go.Pie(labels=porcentagens.index, values=porcentagens.values, title="")])
     config_layout(fig_tipo)
     st.subheader(f"Respostas filtradas: {len(dff)}")
-    st.write("**Distribuição de Ações de Divulgação Científica por Dimensão Acadêmica**")
+    st.write("**Distribuição de Ações de Divulgação Científica por Dimensão Acadêmica (Porcentagem)**")
     st.plotly_chart(fig_tipo, use_container_width=True)
     st.markdown("**Observação:** Cada respondente poderia mencionar até 5 ações de Divulgação Científica. Os números aqui apresentados representam o somatório de todas as ações.")
 
 # Gráfico de Grande Área CNPq
 with tab_gde_area:
-    gde_area_counts = dff['gde_area'].value_counts().reset_index()
-    gde_area_counts.columns = ['gde_area', 'count']
+    gde_area_counts = dff['gde_area'].value_counts(normalize=True).reset_index()
+    gde_area_counts.columns = ['gde_area', 'percentage']
+    gde_area_counts['percentage'] *= 100
     st.subheader(f"Respostas filtradas: {len(dff)}")
     fig_grande_area = px.bar(
         gde_area_counts, 
         x='gde_area', 
-        y='count',
-        labels={'gde_area': '', 'count': ''}, 
-        title="Distribuição por Grande Área")
+        y='percentage',
+        labels={'gde_area': '', 'percentage': '%'}, 
+        title="Distribuição por Grande Área (Porcentagem)")
     config_layout(fig_grande_area)
     st.plotly_chart(fig_grande_area, use_container_width=True)
 
 # Gráfico de Área de Extensão
 with tab_area_ext:
-    area_ext_counts = dff['area_extensao'].value_counts().reset_index()
-    area_ext_counts.columns = ['area_extensao', 'count']
+    area_ext_counts = dff['area_extensao'].value_counts(normalize=True).reset_index()
+    area_ext_counts.columns = ['area_extensao', 'percentage']
+    area_ext_counts['percentage'] *= 100
     st.subheader(f"Respostas filtradas: {len(dff)}")
     fig_area_extensao = px.bar(
         area_ext_counts, 
         x='area_extensao', 
-        y='count', 
-        labels={'area_extensao': '', 'count': ''},
-        title="Distribuição por Área de Extensão")
+        y='percentage', 
+        labels={'area_extensao': '', 'percentage': '%'},
+        title="Distribuição por Área de Extensão (Porcentagem)")
     config_layout(fig_area_extensao)
     st.plotly_chart(fig_area_extensao, use_container_width=True)
 
@@ -278,13 +282,14 @@ with tab_unidade:
         'Escola de Música': 'Música',
         'Biblioteca Universitária': 'Biblioteca',
         'Centro Pedagógico': 'CP'
-        }
-    dff_unidade_counts = dff.unidade.value_counts().reset_index()
-    dff_unidade_counts.columns = ['unidade', 'contagem']
+    }
+    dff_unidade_counts = dff.unidade.value_counts(normalize=True).reset_index()
+    dff_unidade_counts.columns = ['unidade', 'percentage']
     dff_unidade_counts['unidade'] = dff_unidade_counts['unidade'].map(mapeamento)
-    fig_unidades = px.bar(dff_unidade_counts, x='unidade', y='contagem',
-                        labels={'unidade': '', 'contagem': ''},
-                        title='Distribuição de ações por Unidade (números absolutos)')
+    dff_unidade_counts['percentage'] *= 100
+    fig_unidades = px.bar(dff_unidade_counts, x='unidade', y='percentage',
+                        labels={'unidade': '', 'percentage': '%'},
+                        title='Distribuição de ações por Unidade (Porcentagem)')
     config_layout(fig_unidades)
     st.subheader(f"Respostas filtradas: {len(dff)}")
     st.plotly_chart(fig_unidades, use_container_width=True)
@@ -302,14 +307,15 @@ with tab_publico:
     'Mulheres', 'LGBTQIA+', 'Imigrantes', 'Moradores de rua'
     ]
     dff_publicos.columns = colunas
-    dff_publicos = dff_publicos.apply(lambda col: col.value_counts().get('Sim', 0)).reset_index()
-    dff_publicos.columns = ['Público', 'Contagem']
-    dff_publicos = dff_publicos.sort_values('Contagem', ascending=False)
+    dff_publicos = dff_publicos.apply(lambda col: col.value_counts().get('Sim', 0))
+    dff_publicos = (dff_publicos / dff_publicos.sum() * 100).reset_index()
+    dff_publicos.columns = ['Público', 'Porcentagem']
+    dff_publicos = dff_publicos.sort_values('Porcentagem', ascending=False)
     fig_publicos = px.bar(dff_publicos, 
                             x='Público', 
-                            y='Contagem',
-                        labels={'Público': '', 'Contagem': ''},
-                        title='Público Alvo Específico (números absolutos)<br><sup>Entre os respondentes que informaram públicos específicos</sup>')
+                            y='Porcentagem',
+                        labels={'Público': '', 'Porcentagem': '%'},
+                        title='Público Alvo Específico (Porcentagem)<br><sup>Entre os respondentes que informaram públicos específicos</sup>')
     config_layout(fig_publicos)
     st.plotly_chart(fig_publicos, use_container_width=True)
 
@@ -325,15 +331,17 @@ with tab_redes:
     facebook = dff['links[SQ002]'].apply(lambda x: "facebook" in str(x)).sum()
     instagram = dff['links[SQ004]'].apply(lambda x: "instagram" in str(x) or '@' in str(x)).sum()
     youtube = dff['links[SQ005]'].apply(lambda x: "youtu" in str(x)).sum()
+    total = websites + facebook + instagram + youtube
     redes_sociais = pd.DataFrame({'Rede Social': ['Websites', 'Facebook', 'Instagram', 'Youtube'],
-                                            'Contagem': [websites, facebook, instagram, youtube]
+                                            'Porcentagem': [(websites / total) * 100, (facebook / total) * 100, 
+                                                            (instagram / total) * 100, (youtube / total) * 100]
                                             })
-    redes_sociais = redes_sociais.sort_values('Contagem', ascending=False)
+    redes_sociais = redes_sociais.sort_values('Porcentagem', ascending=False)
     fig_socialmedia = px.bar(redes_sociais, 
                                 x='Rede Social', 
-                                y='Contagem',
-                            labels={'Rede Social':'', 'Contagem':''},
-                            title='Uso de Redes Sociais nas ações de Divulgação Científica (números absolutos)',
+                                y='Porcentagem',
+                            labels={'Rede Social':'', 'Porcentagem':'%'},
+                            title='Uso de Redes Sociais nas ações de Divulgação Científica (Porcentagem)',
                             )
     config_layout(fig_socialmedia)
     st.plotly_chart(fig_socialmedia, use_container_width=True)
